@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBF / EPH Jegyzőkönyv Kezelő</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Premium Color Palette */
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #e2e8f0;
+            --gray-200: #cbd5e1;
+            --gray-300: #94a3b8;
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --eph-color: #8b5cf6;
+            --eph-dark: #7c3aed;
+
+            /* Professional Shadows & 3D effects */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-float: 0 10px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.06);
+            --shadow-btn: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            --shadow-btn-hover: 0 6px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: radial-gradient(circle at 100% 0%, #e0e7ff 0%, transparent 25%), radial-gradient(circle at 0% 100%, #fae8ff 0%, transparent 25%);
+            background-attachment: fixed;
+            color: var(--text-body);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        /* Modern 3D Header */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.25rem 0;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header.eph-mode {
+            background: linear-gradient(135deg, var(--eph-color), var(--eph-dark));
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            display: flex;
+            gap: 12px;
+        }
+
+        nav button {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        nav button:hover {
+            background: white;
+            color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        header.eph-mode nav button:hover {
+            color: var(--eph-dark);
+        }
+
+        /* Premium Glass Card */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-float);
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--bg-body);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 3D Button Styles */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-btn);
+            position: relative;
+            overflow: hidden;
+            justify-content: center;
+        }
+
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, var(--primary-light), var(--primary));
+            color: white;
+            border: 1px solid var(--primary-dark);
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            box-shadow: var(--shadow-btn-hover);
+        }
+
+        .btn-success {
+            background: linear-gradient(180deg, #34d399, var(--success));
+            color: white;
+            border: 1px solid var(--success-dark);
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-danger {
+            background: linear-gradient(180deg, #f87171, var(--danger));
+            color: white;
+            border: 1px solid var(--danger-dark);
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(180deg, #ffffff, var(--gray-100));
+            color: var(--text-body);
+            border: 1px solid var(--gray-200);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-body);
+            color: var(--text-heading);
+            border-color: var(--gray-300);
+        }
+
+        .btn-eph {
+            background: linear-gradient(180deg, var(--eph-light), var(--eph-color));
+            color: white;
+            border: 1px solid var(--eph-dark);
+            text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            font-size: 0.85rem;
+        }
+
+        /* Modern Forms */
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-body);
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-100);
+            background-color: var(--gray-50);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            color: var(--text-heading);
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-inner);
+        }
+
+        input:hover,
+        select:hover,
+        textarea:hover {
+            border-color: var(--gray-200);
+            background-color: white;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            background-color: white;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), var(--shadow-inner);
+        }
+
+        /* Beautiful Responsive Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--gray-100);
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th,
+        td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        th {
+            background: var(--gray-50);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        tr {
+            transition: background-color 0.2s;
+        }
+
+        tr:hover {
+            background: var(--bg-body);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-draft {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-draft {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: var(--success-dark);
+            border: 1px solid #10b981;
+        }
+
+        /* Smooth Tabs */
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid var(--gray-100);
+            padding-bottom: 2px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+            background: var(--bg-body);
+        }
+
+        .tab.active {
+            color: var(--primary-dark);
+            border-bottom-color: var(--primary);
+            background: linear-gradient(to top, var(--gray-50) 0%, transparent 100%);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glassmorphism Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            padding: 32px;
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: var(--shadow-float);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: #0369a1;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: #92400e;
+        }
+
+        .value-pass {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .value-fail {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .protocol-type-selector {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .protocol-type-option {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .protocol-type-option:hover {
+            border-color: var(--primary);
+        }
+
+        .protocol-type-option.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+        }
+
+        .protocol-type-option.eph.selected {
+            border-color: var(--eph-color);
+            background: #f5f3ff;
+        }
+
+        .protocol-type-option h3 {
+            margin-bottom: 8px;
+        }
+
+        .protocol-type-option p {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+
+        /* Defect/Image styles */
+        .severity-kritikus {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .severity-sulyos {
+            background: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #fed7aa;
+        }
+
+        .severity-kozepes {
+            background: #fefce8;
+            color: #ca8a04;
+            border: 1px solid #fef08a;
+        }
+
+        .severity-enyhe {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+
+        .defect-card {
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: white;
+        }
+
+        .defect-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .defect-title {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .defect-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .defect-image-thumb {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--gray-200);
+            cursor: pointer;
+        }
+
+        .defect-image-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .defect-image-delete {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .image-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-preview-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .image-preview-modal img {
+            max-width: 90%;
+            max-height: 90vh;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-float);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .image-preview-modal.active img {
+            transform: scale(1);
+        }
+
+        .image-preview-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .image-preview-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #f87171;
+        }
+
+        /* Beautiful Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            color: var(--text-heading);
+            padding: 16px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-float);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 4px solid var(--primary);
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toast.success .toast-icon {
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            color: var(--danger);
+        }
+
+        .toast.warning .toast-icon {
+            color: var(--warning);
+        }
+
+        /* Custom Scrollbar for premium feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-50);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        /* Responsive Design - Mobile Optimization */
+        @media (max-width: 768px) {
+            body {
+                background-image: none;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .card {
+                padding: 20px 16px;
+                border-radius: var(--radius-lg);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            th,
+            td {
+                padding: 12px 8px;
+            }
+
+            .protocol-type-selector {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .action-buttons button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .tabs {
+                gap: 4px;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .tab {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-danger {
+            color: var(--danger-dark);
+        }
+
+        .text-success {
+            color: var(--success-dark);
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-2 {
+            gap: 8px;
+        }
+
+        .gap-4 {
+            gap: 16px;
+        }
+
+        .mt-4 {
+            margin-top: 16px;
+        }
+
+        .mb-4 {
+            margin-bottom: 16px;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        /* SVG Icons Styling */
+        svg.icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        svg.icon-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        svg.icon-lg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header id="mainHeader">
+        <div class="header-content">
+            <h1 id="headerTitle">
+                <svg class="icon icon-lg" style="color: #fbbf24;" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                VBF / EPH Jegyzőkönyv Kezelő
+            </h1>
+            <nav>
+                <button onclick="showList()">
+                    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                    </svg>
+                    Lista
+                </button>
+                <button onclick="showNewForm()">
+                    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Új jegyzőkönyv
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Protocol List View -->
+        <div id="listView" class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                    </svg>
+                    Jegyzőkönyvek
+                </h2>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sorszám</th>
+                            <th>Típus</th>
+                            <th>Helyszín</th>
+                            <th>Megrendelő</th>
+                            <th>Dátum</th>
+                            <th>Státusz</th>
+                            <th>Műveletek</th>
+                        </tr>
+                    </thead>
+                    <tbody id="protocolsTableBody">
+                        <!-- JS will populate -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Protocol Form View -->
+        <div id="formView" class="card hidden">
+            <div class="card-header">
+                <h2 class="card-title" id="formTitle">Új jegyzőkönyv</h2>
+                <button class="btn btn-secondary" onclick="showList()">← Vissza</button>
+            </div>
+
+            <form id="protocolForm">
+                <input type="hidden" id="protocolId">
+
+                <!-- Protocol Type Selection -->
+                <div id="typeSelector" class="protocol-type-selector">
+                    <div class="protocol-type-option selected" onclick="selectProtocolType('vbf')" id="typeVbf">
+                        <h3>⚡ VBF</h3>
+                        <p>Villamos Biztonsági Felülvizsgálat - teljes villamos rendszer</p>
+                    </div>
+                    <div class="protocol-type-option eph" onclick="selectProtocolType('eph')" id="typeEph">
+                        <h3>🔌 EPH</h3>
+                        <p>Egyenpotenciálra Hozás - gázszolgáltató, fémszerkezetek</p>
+                    </div>
+                </div>
+                <input type="hidden" id="protocolType" value="vbf">
+
+                <div class="tabs">
+                    <button type="button" class="tab active" data-tab="basic">Alapadatok</button>
+                    <button type="button" class="tab vbf-only" data-tab="rpe">Rpe mérés</button>
+                    <button type="button" class="tab vbf-only" data-tab="insulation">Szigetelés</button>
+                    <button type="button" class="tab vbf-only" data-tab="loop">Hurokell.</button>
+                    <button type="button" class="tab vbf-only" data-tab="rcd">FI-relé</button>
+                    <button type="button" class="tab eph-tab" data-tab="earthing">Földelés</button>
+                    <button type="button" class="tab eph-tab" data-tab="eph">EPH bekötések</button>
+                    <button type="button" class="tab" data-tab="defects" style="color: var(--danger);">🚨
+                        Hibajegyzék</button>
+                    <button type="button" class="tab" data-tab="summary">Összesítés</button>
+                </div>
+
+                <!-- Basic Data Tab -->
+                <div id="tab-basic" class="tab-content active">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Jegyzőkönyv sorszáma *</label>
+                            <input type="text" id="serialNumber" required placeholder="2026/001">
+                        </div>
+                        <div class="form-group">
+                            <label>Bizonyítvány száma</label>
+                            <input type="text" id="certificateNumber" placeholder="VBF-2026-001">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Helyszín *</label>
+                        <input type="text" id="locationAddress" required placeholder="9999 Példa utca 12.">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hálózat típusa *</label>
+                            <select id="networkType" required>
+                                <option value="TN-C-S">TN-C-S</option>
+                                <option value="TN-S">TN-S</option>
+                                <option value="TT">TT</option>
+                                <option value="IT">IT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Vizsgálat típusa *</label>
+                            <select id="inspectionType" required>
+                                <option value="Első ellenőrzés (VBF)">Első ellenőrzés (VBF)</option>
+                                <option value="Időszakos felülvizsgálat">Időszakos felülvizsgálat</option>
+                                <option value="EPH jegyzőkönyv">EPH jegyzőkönyv</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Megrendelő neve *</label>
+                            <input type="text" id="clientName" required placeholder="Példa János">
+                        </div>
+                        <div class="form-group">
+                            <label>Vizsgálat dátuma *</label>
+                            <input type="date" id="inspectionDate" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mérőműszer</label>
+                            <input type="text" id="instrumentModel" placeholder="Metrel MI 3155">
+                        </div>
+                        <div class="form-group">
+                            <label>Kalibráció érvényes</label>
+                            <input type="date" id="calibrationValidUntil">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Felülvizsgáló neve *</label>
+                        <input type="text" id="inspectorName" required placeholder="Szikora Zoltán">
+                    </div>
+
+                    <!-- EPH Specific Fields -->
+                    <div id="ephFields" class="hidden">
+                        <h4 style="margin: 24px 0 16px; color: var(--eph-color);">🔌 EPH specifikus adatok</h4>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="gasProviderRequired"
+                                        style="width: auto; margin-right: 8px;">
+                                    Gázszolgáltató igénye
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gázmérő száma</label>
+                                <input type="text" id="gasMeterNumber" placeholder="GM-123456">
+                            </div>
+                            <div class="form-group">
+                                <label>Gázkészülék típusa</label>
+                                <input type="text" id="gasApplianceType" placeholder="pl. kondenzációs kazán">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>PE vezeték keresztmetszet (mm²)</label>
+                                <input type="number" step="0.1" id="peConductorSize" placeholder="6">
+                            </div>
+                            <div class="form-group">
+                                <label>EPH fővezeték keresztmetszet (mm²)</label>
+                                <input type="number" step="0.1" id="ephConductorSize" placeholder="6">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>PE-N szétválasztás helye</label>
+                            <input type="text" id="penSeparationPoint" placeholder="Főelosztó">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Szakmai összefoglaló</label>
+                        <textarea id="professionalSummary" rows="4"
+                            placeholder="A vizsgálati eredmények alapján..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hibajegyzék</label>
+                        <textarea id="defectList" rows="3" placeholder="Nincs feltárt hiba..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Rpe Measurements Tab (VBF only) -->
+                <div id="tab-rpe" class="tab-content">
+                    <h4>Védővezető folytonosság (Rpe) mérések</h4>
+                    <p style="color: var(--gray-600); margin-bottom: 16px;">Határérték: &lt; 1 Ω (lakóépületnél &lt; 0,3
+                        Ω)</p>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Pont</th>
+                                    <th>Hely</th>
+                                    <th>Rpe (Ω)</th>
+                                    <th>Megfelel</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="rpeMeasurements"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm add-row-btn" onclick="addRpeRow()">+ Sor
+                            hozzáadása</button>
+                    </div>
+                </div>
+
+                <!-- Insulation Measurements Tab (VBF only) -->
+                <div id="tab-insulation" class="tab-content">
+                    <h4>Szigetelési ellenállás mérések (500V DC)</h4>
+                    <p style="color: var(--gray-600); margin-bottom: 16px;">Határérték: ≥ 1 MΩ</p>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Áramkör</th>
+                                    <th>L-N (MΩ)</th>
+                                    <th>L-PE (MΩ)</th>
+                                    <th>N-PE (MΩ)</th>
+                                    <th>Megfelel</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="insulationMeasurements"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm add-row-btn"
+                            onclick="addInsulationRow()">+ Sor hozzáadása</button>
+                    </div>
+                </div>
+
+                <!-- Loop Impedance Tab (VBF only) -->
+                <div id="tab-loop" class="tab-content">
+                    <h4>Hurokellenállás (Zs) mérések</h4>
+                    <p style="color: var(--gray-600); margin-bottom: 16px;">Határérték: Zs ≤ U0 / Ia</p>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Pont</th>
+                                    <th>Hely</th>
+                                    <th>Zs (Ω)</th>
+                                    <th>Megfelel</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="loopMeasurements"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm add-row-btn" onclick="addLoopRow()">+ Sor
+                            hozzáadása</button>
+                    </div>
+                </div>
+
+                <!-- RCD Tests Tab (VBF only) -->
+                <div id="tab-rcd" class="tab-content">
+                    <h4>FI-relé működésvizsgálat</h4>
+                    <p style="color: var(--gray-600); margin-bottom: 16px;">1×IΔn ≤ 300 ms, 5×IΔn ≤ 40 ms</p>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Vizsgálat</th>
+                                    <th>Áram leírás</th>
+                                    <th>Kioldási idő (ms)</th>
+                                    <th>Megfelel</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="rcdTests"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm add-row-btn" onclick="addRcdRow()">+ Sor
+                            hozzáadása</button>
+                    </div>
+                </div>
+
+                <!-- Earthing Measurements Tab -->
+                <div id="tab-earthing" class="tab-content">
+                    <h4>🌍 Földelési ellenállás mérés</h4>
+                    <div class="info-box">
+                        <strong>Határérték:</strong> Ra ≤ 10 Ω (MSZ 447:2019 szerint)
+                    </div>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Módszer</th>
+                                    <th>Ra (Ω)</th>
+                                    <th>Rb (Ω)</th>
+                                    <th>Rc (Ω)</th>
+                                    <th>ρE (Ωm)</th>
+                                    <th>Talaj</th>
+                                    <th>Megfelel</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="earthingMeasurements"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-eph btn-sm add-row-btn" onclick="addEarthingRow()">+
+                            Földelés mérés hozzáadása</button>
+                    </div>
+                </div>
+
+                <!-- EPH Measurements Tab -->
+                <div id="tab-eph" class="tab-content">
+                    <h4>🔌 EPH bekötések folytonosság mérése</h4>
+                    <div class="info-box">
+                        Az EPH bekötések folytonosságának ellenőrzése a fémszerkezeteken (vízcső, gázcső, fűtés, fémkád
+                        stb.)
+                    </div>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Elem neve</th>
+                                    <th>Típus</th>
+                                    <th>Bekötési pont</th>
+                                    <th>R (Ω)</th>
+                                    <th>Megfelel</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ephMeasurements"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-eph btn-sm add-row-btn" onclick="addEphRow()">+ EPH bekötés
+                            hozzáadása</button>
+                    </div>
+                </div>
+
+                <!-- Defects Tab -->
+                <div id="tab-defects" class="tab-content">
+                    <h4>🚨 Hibajegyzék - Feltárt hibák</h4>
+                    <div class="info-box" id="defectsInfo">
+                        <strong>Megjegyzés:</strong> A hibák először a jegyzőkönyv mentése után adhatók hozzá. A hibákat
+                        az adatbázisból töltjük be.
+                    </div>
+
+                    <!-- Add defect form (only shown for existing protocols) -->
+                    <div id="addDefectSection" class="hidden">
+                        <h5 style="margin: 16px 0 12px;">➕ Új hiba hozzáadása</h5>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Hiba típusa</label>
+                                <select id="newDefectType" onchange="updateDefectDescription()">
+                                    <option value="">-- Válasszon hibatípust --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Helyszín</label>
+                                <input type="text" id="newDefectLocation" placeholder="pl. Nappali, Konyha">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Egyedi leírás (opcionális)</label>
+                            <textarea id="newDefectDescription" rows="2"
+                                placeholder="Ha eltér a sablon szövegtől..."></textarea>
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="addDefect()">🚨 Hiba rögzítése</button>
+                    </div>
+
+                    <!-- Defect list -->
+                    <div id="defectsList" style="margin-top: 24px;">
+                        <h5 style="margin-bottom: 12px;">📋 Rögzített hibák</h5>
+                        <div id="defectsContainer">
+                            <p style="color: var(--gray-600);">Még nincsenek hibák rögzítve.</p>
+                        </div>
+                    </div>
+
+                    <!-- Template texts section -->
+                    <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--gray-200);">
+                        <h5 style="margin-bottom: 12px;">📝 Sablon szövegek beillesztése</h5>
+                        <div class="template-select">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Kategória</label>
+                                    <select id="templateCategory" onchange="loadTemplatesByCategory()">
+                                        <option value="">-- Válasszon --</option>
+                                        <option value="bevezetes">Bevezetés</option>
+                                        <option value="modszer">Vizsgálati módszer</option>
+                                        <option value="megallapitas">Megállapítás</option>
+                                        <option value="zaro">Záró szöveg</option>
+                                        <option value="nyilatkozat">Nyilatkozatok</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Sablon</label>
+                                    <select id="templateSelect">
+                                        <option value="">-- Válasszon kategóriát először --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="insertTemplate()">
+                                <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                                </svg>
+                                Beillesztés az összefoglalóba
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Tab -->
+                <div id="tab-summary" class="tab-content">
+                    <h4>Vizsgálati összesítés</h4>
+                    <div class="measurement-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Vizsgálat</th>
+                                    <th>Minősítés</th>
+                                    <th>Megjegyzés</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="summaryResults"></tbody>
+                        </table>
+                        <button type="button" class="btn btn-secondary btn-sm add-row-btn" onclick="addSummaryRow()">
+                            <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                            Sor hozzáadása
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="showList()">
+                        <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Mégse
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                        </svg>
+                        Mentés
+                    </button>
+                </div>
+            </form>
+        </div>
+        </div>
+    </main>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>Törlés megerősítése</h3>
+            <p>Biztosan törölni szeretné ezt a jegyzőkönyvet? Ez a művelet nem vonható vissza.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Mégse</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Törlés</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+        let deleteId = null;
+        let currentProtocolType = 'vbf';
+
+        // Tab handling
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+
+        // Protocol type selection
+        function selectProtocolType(type) {
+            currentProtocolType = type;
+            document.getElementById('protocolType').value = type;
+
+            // Update selector UI
+            document.getElementById('typeVbf').classList.toggle('selected', type === 'vbf');
+            document.getElementById('typeEph').classList.toggle('selected', type === 'eph');
+
+            // Update header color
+            document.getElementById('mainHeader').classList.toggle('eph-mode', type === 'eph');
+
+            // Show/hide EPH fields
+            document.getElementById('ephFields').classList.toggle('hidden', type === 'vbf');
+
+            // Show/hide tabs based on type
+            document.querySelectorAll('.tab.vbf-only').forEach(tab => {
+                tab.classList.toggle('hidden', type === 'eph');
+            });
+            document.querySelectorAll('.tab.eph-tab').forEach(tab => {
+                tab.style.display = (type === 'eph' || type === 'vbf') ? '' : 'none';
+            });
+
+            // Update inspection type dropdown
+            if (type === 'eph') {
+                document.getElementById('inspectionType').value = 'EPH jegyzőkönyv';
+            } else {
+                document.getElementById('inspectionType').value = 'Első ellenőrzés (VBF)';
+            }
+
+            // Reset to first tab
+            document.querySelector('.tab').click();
+        }
+
+        // Show list view
+        function showList() {
+            document.getElementById('listView').classList.remove('hidden');
+            document.getElementById('formView').classList.add('hidden');
+            document.getElementById('mainHeader').classList.remove('eph-mode');
+            loadProtocols();
+        }
+
+        // Show form for new protocol
+        async function showNewForm() {
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('formView').classList.remove('hidden');
+            document.getElementById('formTitle').textContent = 'Új jegyzőkönyv';
+            document.getElementById('protocolForm').reset();
+            document.getElementById('protocolId').value = '';
+            document.getElementById('typeSelector').classList.remove('hidden');
+
+            // Reset to VBF type
+            selectProtocolType('vbf');
+
+            // Get next serial number
+            try {
+                const response = await fetch(`${API_URL}/next-serial`);
+                const data = await response.json();
+                document.getElementById('serialNumber').value = data.serial_number;
+            } catch (e) {
+                console.error('Error getting next serial:', e);
+            }
+
+            // Set default date
+            document.getElementById('inspectionDate').value = new Date().toISOString().split('T')[0];
+
+            // Clear measurement tables
+            clearMeasurementTables();
+
+            // Add default summary rows
+            addDefaultSummaryRows();
+
+            // Reset to first tab
+            document.querySelector('.tab').click();
+        }
+
+        // Show form for editing
+        async function editProtocol(id) {
+            document.getElementById('listView').classList.add('hidden');
+            document.getElementById('formView').classList.remove('hidden');
+            document.getElementById('formTitle').textContent = 'Jegyzőkönyv szerkesztése';
+            document.getElementById('protocolId').value = id;
+            document.getElementById('typeSelector').classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}/protocols/${id}`);
+                const protocol = await response.json();
+
+                // Set protocol type
+                selectProtocolType(protocol.protocol_type || 'vbf');
+
+                // Fill basic data
+                document.getElementById('serialNumber').value = protocol.serial_number;
+                document.getElementById('certificateNumber').value = protocol.certificate_number || '';
+                document.getElementById('locationAddress').value = protocol.location_address;
+                document.getElementById('networkType').value = protocol.network_type;
+                document.getElementById('inspectionType').value = protocol.inspection_type;
+                document.getElementById('clientName').value = protocol.client_name;
+                document.getElementById('inspectionDate').value = protocol.inspection_date;
+                document.getElementById('instrumentModel').value = protocol.instrument_model || '';
+                document.getElementById('calibrationValidUntil').value = protocol.calibration_valid_until || '';
+                document.getElementById('inspectorName').value = protocol.inspector_name;
+                document.getElementById('professionalSummary').value = protocol.professional_summary || '';
+                document.getElementById('defectList').value = protocol.defect_list || '';
+
+                // Fill EPH specific fields
+                document.getElementById('gasProviderRequired').checked = protocol.gas_provider_required || false;
+                document.getElementById('gasMeterNumber').value = protocol.gas_meter_number || '';
+                document.getElementById('gasApplianceType').value = protocol.gas_appliance_type || '';
+                document.getElementById('peConductorSize').value = protocol.pe_conductor_size || '';
+                document.getElementById('ephConductorSize').value = protocol.eph_conductor_size || '';
+                document.getElementById('penSeparationPoint').value = protocol.pen_separation_point || '';
+
+                // Fill measurement tables
+                clearMeasurementTables();
+
+                protocol.rpe_measurements.forEach(m => addRpeRow(m));
+                protocol.insulation_measurements.forEach(m => addInsulationRow(m));
+                protocol.loop_impedance_measurements.forEach(m => addLoopRow(m));
+                protocol.rcd_tests.forEach(m => addRcdRow(m));
+                protocol.summary_results.forEach(m => addSummaryRow(m));
+
+                // EPH/Earthing measurements
+                if (protocol.earthing_measurements) {
+                    protocol.earthing_measurements.forEach(m => addEarthingRow(m));
+                }
+                if (protocol.eph_measurements) {
+                    protocol.eph_measurements.forEach(m => addEphRow(m));
+                }
+
+                // Reset to first tab
+                document.querySelector('.tab').click();
+            } catch (e) {
+                showToast('Hiba a jegyzőkönyv betöltésekor', 'error');
+            }
+        }
+
+        // Clear all measurement tables
+        function clearMeasurementTables() {
+            document.getElementById('rpeMeasurements').innerHTML = '';
+            document.getElementById('insulationMeasurements').innerHTML = '';
+            document.getElementById('loopMeasurements').innerHTML = '';
+            document.getElementById('rcdTests').innerHTML = '';
+            document.getElementById('summaryResults').innerHTML = '';
+            document.getElementById('earthingMeasurements').innerHTML = '';
+            document.getElementById('ephMeasurements').innerHTML = '';
+        }
+
+        // Add default summary rows
+        function addDefaultSummaryRows() {
+            const vbfDefaults = [
+                'Dokumentáció', 'Szemrevételezés', 'Rpe', 'Szigetelés',
+                'Hurokellenállás', 'FI-relé', 'Dugaljak állapota', 'Kötések', 'Érintésvédelem'
+            ];
+            const ephDefaults = [
+                'Földelési ellenállás', 'EPH fővezeték', 'EPH bekötések folytonossága',
+                'Gázcső bekötés', 'Vízcső bekötés', 'Fűtéscső bekötés'
+            ];
+
+            const defaults = currentProtocolType === 'eph' ? ephDefaults : vbfDefaults;
+            defaults.forEach(name => addSummaryRow({ test_name: name, result: 'MEGFELELT', comment: 'Határértéken belül' }));
+        }
+
+        // Add measurement rows - VBF
+        function addRpeRow(data = {}) {
+            const tbody = document.getElementById('rpeMeasurements');
+            const rowNum = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="number" class="rpe-point" value="${data.point_number || rowNum}" style="width:60px"></td>
+                <td><input type="text" class="rpe-location" value="${data.location || ''}" placeholder="Nappali dugalj"></td>
+                <td><input type="number" step="0.01" class="rpe-value" value="${data.value_ohm || ''}" placeholder="0.17"></td>
+                <td><select class="rpe-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function addInsulationRow(data = {}) {
+            const tbody = document.getElementById('insulationMeasurements');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="ins-circuit" value="${data.circuit_name || ''}" placeholder="Világítás"></td>
+                <td><input type="number" step="0.01" class="ins-ln" value="${data.ln_value_mohm || ''}" placeholder="252.83"></td>
+                <td><input type="number" step="0.01" class="ins-lpe" value="${data.lpe_value_mohm || ''}" placeholder="317.58"></td>
+                <td><input type="number" step="0.01" class="ins-npe" value="${data.npe_value_mohm || ''}" placeholder="301.19"></td>
+                <td><select class="ins-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function addLoopRow(data = {}) {
+            const tbody = document.getElementById('loopMeasurements');
+            const rowNum = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="number" class="loop-point" value="${data.point_number || rowNum}" style="width:60px"></td>
+                <td><input type="text" class="loop-location" value="${data.location || ''}" placeholder="Nappali dugalj"></td>
+                <td><input type="number" step="0.01" class="loop-value" value="${data.value_ohm || ''}" placeholder="0.51"></td>
+                <td><select class="loop-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function addRcdRow(data = {}) {
+            const tbody = document.getElementById('rcdTests');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="rcd-type" value="${data.test_type || ''}" placeholder="1×IΔn"></td>
+                <td><input type="text" class="rcd-current" value="${data.current_description || ''}" placeholder="Átlagterhelés"></td>
+                <td><input type="number" step="0.01" class="rcd-time" value="${data.trip_time_ms || ''}" placeholder="56.81"></td>
+                <td><select class="rcd-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Add measurement rows - EPH/Earthing
+        function addEarthingRow(data = {}) {
+            const tbody = document.getElementById('earthingMeasurements');
+            const tr = document.createElement('tr');
+            const raValue = data.ra_value || '';
+            const isPassed = raValue !== '' ? (parseFloat(raValue) <= 10) : (data.passed !== false);
+
+            tr.innerHTML = `
+                <td>
+                    <select class="earth-method" style="width:100px">
+                        <option value="3_wire" ${data.measurement_method === '3_wire' ? 'selected' : ''}>3-wire</option>
+                        <option value="2_clamp" ${data.measurement_method === '2_clamp' ? 'selected' : ''}>2-clamp</option>
+                        <option value="soil_resistivity" ${data.measurement_method === 'soil_resistivity' ? 'selected' : ''}>Talaj</option>
+                    </select>
+                </td>
+                <td><input type="number" step="0.01" class="earth-ra" value="${raValue}" placeholder="5.2" onchange="checkEarthingLimit(this)"></td>
+                <td><input type="number" step="0.01" class="earth-rb" value="${data.rb_value || ''}" placeholder="-"></td>
+                <td><input type="number" step="0.01" class="earth-rc" value="${data.rc_value || ''}" placeholder="-"></td>
+                <td><input type="number" step="0.1" class="earth-rho" value="${data.soil_resistivity || ''}" placeholder="-"></td>
+                <td>
+                    <select class="earth-soil" style="width:90px">
+                        <option value="">-</option>
+                        <option value="humus" ${data.soil_type === 'humus' ? 'selected' : ''}>Humusz</option>
+                        <option value="clay" ${data.soil_type === 'clay' ? 'selected' : ''}>Agyag</option>
+                        <option value="sand" ${data.soil_type === 'sand' ? 'selected' : ''}>Homok</option>
+                        <option value="gravel" ${data.soil_type === 'gravel' ? 'selected' : ''}>Kavics</option>
+                        <option value="rock" ${data.soil_type === 'rock' ? 'selected' : ''}>Szikla</option>
+                        <option value="mixed" ${data.soil_type === 'mixed' ? 'selected' : ''}>Vegyes</option>
+                    </select>
+                </td>
+                <td><select class="earth-passed"><option value="true" ${isPassed ? 'selected' : ''}>Igen</option><option value="false" ${!isPassed ? 'selected' : ''}>Nem</option></select></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function checkEarthingLimit(input) {
+            const tr = input.closest('tr');
+            const passedSelect = tr.querySelector('.earth-passed');
+            const value = parseFloat(input.value);
+            if (!isNaN(value)) {
+                passedSelect.value = value <= 10 ? 'true' : 'false';
+                input.style.color = value <= 10 ? 'var(--success)' : 'var(--danger)';
+                input.style.fontWeight = '600';
+            }
+        }
+
+        function addEphRow(data = {}) {
+            const tbody = document.getElementById('ephMeasurements');
+            const rowNum = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="number" class="eph-point" value="${data.point_number || rowNum}" style="width:50px"></td>
+                <td><input type="text" class="eph-name" value="${data.element_name || ''}" placeholder="Vízcső"></td>
+                <td>
+                    <select class="eph-type" style="width:130px">
+                        <option value="water_pipe" ${data.element_type === 'water_pipe' ? 'selected' : ''}>Vízcső</option>
+                        <option value="gas_pipe_metered" ${data.element_type === 'gas_pipe_metered' ? 'selected' : ''}>Gázcső (mérő előtt)</option>
+                        <option value="gas_pipe_unmetered" ${data.element_type === 'gas_pipe_unmetered' ? 'selected' : ''}>Gázcső (mérő után)</option>
+                        <option value="heating_pipe" ${data.element_type === 'heating_pipe' ? 'selected' : ''}>Fűtéscső</option>
+                        <option value="metal_bathtub" ${data.element_type === 'metal_bathtub' ? 'selected' : ''}>Fémkád</option>
+                        <option value="shower_tray" ${data.element_type === 'shower_tray' ? 'selected' : ''}>Zuhanytálca</option>
+                        <option value="lightning_conductor" ${data.element_type === 'lightning_conductor' ? 'selected' : ''}>Villámhárító</option>
+                        <option value="other" ${data.element_type === 'other' || !data.element_type ? 'selected' : ''}>Egyéb</option>
+                    </select>
+                </td>
+                <td><input type="text" class="eph-conn" value="${data.connection_point || 'EPH sín'}" placeholder="EPH sín"></td>
+                <td><input type="number" step="0.01" class="eph-resistance" value="${data.continuity_resistance || ''}" placeholder="0.15"></td>
+                <td><select class="eph-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function addSummaryRow(data = {}) {
+            const tbody = document.getElementById('summaryResults');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="sum-name" value="${data.test_name || ''}" placeholder="Dokumentáció"></td>
+                <td><select class="sum-result">
+                    <option value="MEGFELELT" ${data.result === 'MEGFELELT' ? 'selected' : ''}>MEGFELELT</option>
+                    <option value="NEM FELELT MEG" ${data.result === 'NEM FELELT MEG' ? 'selected' : ''}>NEM FELELT MEG</option>
+                    <option value="NEM VIZSGÁLT" ${data.result === 'NEM VIZSGÁLT' ? 'selected' : ''}>NEM VIZSGÁLT</option>
+                </select></td>
+                <td><input type="text" class="sum-comment" value="${data.comment || ''}" placeholder="Határértéken belül"></td>
+                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        // Collect measurement data from tables
+        function collectMeasurements() {
+            const rpe = Array.from(document.querySelectorAll('#rpeMeasurements tr')).map(tr => ({
+                point_number: parseInt(tr.querySelector('.rpe-point').value) || 0,
+                location: tr.querySelector('.rpe-location').value,
+                value_ohm: parseFloat(tr.querySelector('.rpe-value').value) || 0,
+                passed: tr.querySelector('.rpe-passed').value === 'true'
+            })).filter(m => m.location);
+
+            const insulation = Array.from(document.querySelectorAll('#insulationMeasurements tr')).map(tr => ({
+                circuit_name: tr.querySelector('.ins-circuit').value,
+                ln_value_mohm: parseFloat(tr.querySelector('.ins-ln').value) || 0,
+                lpe_value_mohm: parseFloat(tr.querySelector('.ins-lpe').value) || 0,
+                npe_value_mohm: parseFloat(tr.querySelector('.ins-npe').value) || 0,
+                passed: tr.querySelector('.ins-passed').value === 'true'
+            })).filter(m => m.circuit_name);
+
+            const loop = Array.from(document.querySelectorAll('#loopMeasurements tr')).map(tr => ({
+                point_number: parseInt(tr.querySelector('.loop-point').value) || 0,
+                location: tr.querySelector('.loop-location').value,
+                value_ohm: parseFloat(tr.querySelector('.loop-value').value) || 0,
+                passed: tr.querySelector('.loop-passed').value === 'true'
+            })).filter(m => m.location);
+
+            const rcd = Array.from(document.querySelectorAll('#rcdTests tr')).map(tr => ({
+                test_type: tr.querySelector('.rcd-type').value,
+                current_description: tr.querySelector('.rcd-current').value,
+                trip_time_ms: parseFloat(tr.querySelector('.rcd-time').value) || null,
+                passed: tr.querySelector('.rcd-passed').value === 'true'
+            })).filter(m => m.test_type);
+
+            const summary = Array.from(document.querySelectorAll('#summaryResults tr')).map(tr => ({
+                test_name: tr.querySelector('.sum-name').value,
+                result: tr.querySelector('.sum-result').value,
+                comment: tr.querySelector('.sum-comment').value
+            })).filter(m => m.test_name);
+
+            // Earthing measurements
+            const earthing = Array.from(document.querySelectorAll('#earthingMeasurements tr')).map(tr => ({
+                measurement_method: tr.querySelector('.earth-method').value,
+                ra_value: parseFloat(tr.querySelector('.earth-ra').value) || null,
+                rb_value: parseFloat(tr.querySelector('.earth-rb').value) || null,
+                rc_value: parseFloat(tr.querySelector('.earth-rc').value) || null,
+                soil_resistivity: parseFloat(tr.querySelector('.earth-rho').value) || null,
+                soil_type: tr.querySelector('.earth-soil').value || null,
+                passed: tr.querySelector('.earth-passed').value === 'true'
+            })).filter(m => m.ra_value !== null);
+
+            // EPH measurements
+            const eph = Array.from(document.querySelectorAll('#ephMeasurements tr')).map(tr => ({
+                point_number: parseInt(tr.querySelector('.eph-point').value) || 0,
+                element_name: tr.querySelector('.eph-name').value,
+                element_type: tr.querySelector('.eph-type').value,
+                connection_point: tr.querySelector('.eph-conn').value,
+                continuity_resistance: parseFloat(tr.querySelector('.eph-resistance').value) || null,
+                passed: tr.querySelector('.eph-passed').value === 'true'
+            })).filter(m => m.element_name);
+
+            return { rpe, insulation, loop, rcd, summary, earthing, eph };
+        }
+
+        // Load protocols list
+        async function loadProtocols() {
+            try {
+                const response = await fetch(`${API_URL}/protocols`);
+                const protocols = await response.json();
+
+                const tbody = document.getElementById('protocolsTableBody');
+                if (protocols.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--gray-600);">Nincs még jegyzőkönyv. Kattintson az "Új jegyzőkönyv" gombra a létrehozáshoz.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = protocols.map(p => `
+                    <tr>
+                        <td><strong>${p.serial_number}</strong></td>
+                        <td><span class="type-badge type-${p.protocol_type || 'vbf'}">${(p.protocol_type || 'vbf').toUpperCase()}</span></td>
+                        <td>${p.location_address}</td>
+                        <td>${p.client_name}</td>
+                        <td>${p.inspection_date}</td>
+                        <td><span class="status-badge status-${p.status}">${p.status === 'draft' ? 'Piszkozat' : 'Kész'}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" onclick="editProtocol('${p.id}')">
+                                    <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                    </svg>
+                                    Szerk.
+                                </button>
+                                <button class="btn btn-success btn-sm" onclick="downloadProtocol('${p.id}')">
+                                    <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    Word
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${p.id}')">
+                                    <svg class="icon icon-sm" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading protocols:', e);
+                document.getElementById('protocolsTableBody').innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 40px; color: var(--danger);">Hiba a lista betöltésekor</td></tr>`;
+            }
+        }
+
+        // Form submit handler
+        document.getElementById('protocolForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const measurements = collectMeasurements();
+            const data = {
+                serial_number: document.getElementById('serialNumber').value,
+                certificate_number: document.getElementById('certificateNumber').value || null,
+                location_address: document.getElementById('locationAddress').value,
+                network_type: document.getElementById('networkType').value,
+                client_name: document.getElementById('clientName').value,
+                inspection_type: document.getElementById('inspectionType').value,
+                inspection_date: document.getElementById('inspectionDate').value,
+                instrument_model: document.getElementById('instrumentModel').value || null,
+                calibration_valid_until: document.getElementById('calibrationValidUntil').value || null,
+                inspector_name: document.getElementById('inspectorName').value,
+                professional_summary: document.getElementById('professionalSummary').value || null,
+                defect_list: document.getElementById('defectList').value || null,
+                status: 'draft',
+                // Protocol type
+                protocol_type: document.getElementById('protocolType').value,
+                // EPH specific fields
+                gas_provider_required: document.getElementById('gasProviderRequired').checked,
+                gas_meter_number: document.getElementById('gasMeterNumber').value || null,
+                gas_appliance_type: document.getElementById('gasApplianceType').value || null,
+                pe_conductor_size: parseFloat(document.getElementById('peConductorSize').value) || null,
+                eph_conductor_size: parseFloat(document.getElementById('ephConductorSize').value) || null,
+                pen_separation_point: document.getElementById('penSeparationPoint').value || null,
+                // Measurements
+                rpe_measurements: measurements.rpe,
+                insulation_measurements: measurements.insulation,
+                loop_impedance_measurements: measurements.loop,
+                rcd_tests: measurements.rcd,
+                summary_results: measurements.summary,
+                earthing_measurements: measurements.earthing,
+                eph_measurements: measurements.eph
+            };
+
+            const protocolId = document.getElementById('protocolId').value;
+            const isEdit = !!protocolId;
+
+            try {
+                const response = await fetch(
+                    isEdit ? `${API_URL}/protocols/${protocolId}` : `${API_URL}/protocols`,
+                    {
+                        method: isEdit ? 'PUT' : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    }
+                );
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Hiba történt');
+                }
+
+                showToast(isEdit ? 'Jegyzőkönyv frissítve!' : 'Jegyzőkönyv létrehozva!', 'success');
+                showList();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        });
+
+        // Download Word document
+        async function downloadProtocol(id) {
+            try {
+                const response = await fetch(`${API_URL}/protocols/${id}/download`);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = response.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'jegyzokonyv.docx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showToast('Dokumentum letöltve!', 'success');
+            } catch (e) {
+                showToast('Hiba a letöltéskor', 'error');
+            }
+        }
+
+        // Delete modal
+        function showDeleteModal(id) {
+            deleteId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            deleteId = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!deleteId) return;
+
+            try {
+                await fetch(`${API_URL}/protocols/${deleteId}`, { method: 'DELETE' });
+                showToast('Jegyzőkönyv törölve!', 'success');
+                closeDeleteModal();
+                loadProtocols();
+            } catch (e) {
+                showToast('Hiba a törléskor', 'error');
+            }
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ==================== DEFECTS MANAGEMENT ====================
+
+        let defectTypes = [];
+        let templateTexts = [];
+        let currentDefects = [];
+
+        // Load defect types on page load
+        async function loadDefectTypes() {
+            try {
+                const response = await fetch(`${API_URL}/defect-types`);
+                defectTypes = await response.json();
+
+                const select = document.getElementById('newDefectType');
+                select.innerHTML = '<option value="">-- Válasszon hibatípust --</option>';
+                defectTypes.forEach(dt => {
+                    const severityEmoji = {
+                        'kritikus': '🔴',
+                        'sulyos': '🟠',
+                        'kozepes': '🟡',
+                        'enyhe': '🟢'
+                    }[dt.severity] || '⚪';
+                    select.innerHTML += `<option value="${dt.id}" data-description="${dt.template_text || ''}">${severityEmoji} ${dt.name}</option>`;
+                });
+            } catch (e) {
+                console.error('Error loading defect types:', e);
+            }
+        }
+
+        function updateDefectDescription() {
+            const select = document.getElementById('newDefectType');
+            const option = select.options[select.selectedIndex];
+            if (option && option.dataset.description) {
+                document.getElementById('newDefectDescription').placeholder = option.dataset.description;
+            }
+        }
+
+        // Load defects for a protocol
+        async function loadProtocolDefects(protocolId) {
+            if (!protocolId) {
+                document.getElementById('defectsInfo').classList.remove('hidden');
+                document.getElementById('addDefectSection').classList.add('hidden');
+                document.getElementById('defectsContainer').innerHTML = '<p style="color: var(--gray-600);">Mentse el a jegyzőkönyvet a hibák kezeléséhez.</p>';
+                return;
+            }
+
+            document.getElementById('defectsInfo').classList.add('hidden');
+            document.getElementById('addDefectSection').classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}/protocols/${protocolId}/defects`);
+                currentDefects = await response.json();
+                renderDefects();
+            } catch (e) {
+                console.error('Error loading defects:', e);
+            }
+        }
+
+        function renderDefects() {
+            const container = document.getElementById('defectsContainer');
+
+            if (currentDefects.length === 0) {
+                container.innerHTML = '<p style="color: var(--gray-600);">Nincs rögzített hiba. ✅</p>';
+                return;
+            }
+
+            container.innerHTML = currentDefects.map((defect, idx) => {
+                const dt = defect.defect_type;
+                const severity = defect.severity_override || (dt ? dt.severity : 'kozepes');
+                const name = dt ? dt.name : 'Egyéb hiba';
+                const description = defect.custom_description || (dt ? dt.template_text : '') || '';
+
+                const severityLabels = {
+                    'kritikus': 'Kritikus',
+                    'sulyos': 'Súlyos',
+                    'kozepes': 'Közepes',
+                    'enyhe': 'Enyhe'
+                };
+
+                return `
+                <div class="defect-card severity-${severity}">
+                    <div class="defect-header">
+                        <div>
+                            <span class="defect-title">${idx + 1}. ${name}</span>
+                            <span class="status-badge severity-${severity}" style="margin-left: 8px;">${severityLabels[severity] || severity}</span>
+                            ${defect.location ? `<span style="color: var(--gray-600); margin-left: 8px;">📍 ${defect.location}</span>` : ''}
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteDefect('${defect.id}')">🗑️ Törlés</button>
+                    </div>
+                    ${description ? `<p style="font-size: 0.9rem; color: var(--gray-700);">${description}</p>` : ''}
+                    <div class="defect-images" id="defect-images-${defect.id}">
+                        ${(defect.images || []).map(img => `
+                            <div class="defect-image-container">
+                                <img src="/api/uploads/${img.image_path}" class="defect-image-thumb" onclick="showImagePreview('/api/uploads/${img.image_path}')" title="${img.description || img.original_filename || ''}">
+                                <button class="defect-image-delete" onclick="deleteDefectImage('${img.id}', '${defect.id}')">×</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div style="margin-top: 12px;">
+                        <label style="display: inline-block; cursor: pointer;" class="btn btn-secondary btn-sm">
+                            📷 Kép hozzáadása
+                            <input type="file" accept="image/*" style="display: none;" onchange="uploadDefectImage('${defect.id}', this)">
+                        </label>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        async function addDefect() {
+            const protocolId = document.getElementById('protocolId').value;
+            if (!protocolId) {
+                showToast('Először mentse el a jegyzőkönyvet!', 'error');
+                return;
+            }
+
+            const defectTypeId = document.getElementById('newDefectType').value;
+            const location = document.getElementById('newDefectLocation').value;
+            const customDescription = document.getElementById('newDefectDescription').value;
+
+            if (!defectTypeId && !customDescription) {
+                showToast('Válasszon hibatípust vagy adjon meg egyedi leírást!', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/protocols/${protocolId}/defects`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        defect_type_id: defectTypeId || null,
+                        location: location || null,
+                        custom_description: customDescription || null
+                    })
+                });
+
+                if (!response.ok) throw new Error('Hiba történt');
+
+                // Clear form
+                document.getElementById('newDefectType').value = '';
+                document.getElementById('newDefectLocation').value = '';
+                document.getElementById('newDefectDescription').value = '';
+
+                // Reload defects
+                await loadProtocolDefects(protocolId);
+                showToast('Hiba rögzítve!', 'success');
+            } catch (e) {
+                showToast('Hiba a mentéskor', 'error');
+            }
+        }
+
+        async function deleteDefect(defectId) {
+            const protocolId = document.getElementById('protocolId').value;
+            if (!confirm('Biztosan törli ezt a hibát?')) return;
+
+            try {
+                await fetch(`${API_URL}/protocols/${protocolId}/defects/${defectId}`, { method: 'DELETE' });
+                await loadProtocolDefects(protocolId);
+                showToast('Hiba törölve!', 'success');
+            } catch (e) {
+                showToast('Hiba a törléskor', 'error');
+            }
+        }
+
+        async function uploadDefectImage(defectId, input) {
+            const protocolId = document.getElementById('protocolId').value;
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_URL}/protocols/${protocolId}/defects/${defectId}/images`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Feltöltés sikertelen');
+
+                await loadProtocolDefects(protocolId);
+                showToast('Kép feltöltve!', 'success');
+            } catch (e) {
+                showToast('Hiba a feltöltéskor', 'error');
+            }
+
+            input.value = '';
+        }
+
+        async function deleteDefectImage(imageId, defectId) {
+            if (!confirm('Biztosan törli ezt a képet?')) return;
+
+            try {
+                await fetch(`${API_URL}/defect-images/${imageId}`, { method: 'DELETE' });
+                const protocolId = document.getElementById('protocolId').value;
+                await loadProtocolDefects(protocolId);
+                showToast('Kép törölve!', 'success');
+            } catch (e) {
+                showToast('Hiba a törléskor', 'error');
+            }
+        }
+
+        function showImagePreview(src) {
+            const modal = document.createElement('div');
+            modal.className = 'image-preview-modal';
+            modal.innerHTML = `
+                <img src="${src}">
+                <button class="image-preview-close" onclick="this.parentElement.remove()">✕ Bezárás</button>
+            `;
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            document.body.appendChild(modal);
+        }
+
+        // ==================== TEMPLATE TEXTS ====================
+
+        async function loadTemplatesByCategory() {
+            const category = document.getElementById('templateCategory').value;
+            const select = document.getElementById('templateSelect');
+
+            if (!category) {
+                select.innerHTML = '<option value="">-- Válasszon kategóriát először --</option>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/template-texts?category=${category}`);
+                const templates = await response.json();
+
+                select.innerHTML = '<option value="">-- Válasszon sablont --</option>';
+                templates.forEach(t => {
+                    select.innerHTML += `<option value="${t.id}" data-content="${encodeURIComponent(t.content)}">${t.title}</option>`;
+                });
+            } catch (e) {
+                console.error('Error loading templates:', e);
+            }
+        }
+
+        function insertTemplate() {
+            const select = document.getElementById('templateSelect');
+            const option = select.options[select.selectedIndex];
+
+            if (!option || !option.dataset.content) {
+                showToast('Válasszon egy sablont!', 'error');
+                return;
+            }
+
+            const content = decodeURIComponent(option.dataset.content);
+            const summary = document.getElementById('professionalSummary');
+
+            if (summary.value) {
+                summary.value += '\n\n' + content;
+            } else {
+                summary.value = content;
+            }
+
+            // Switch to basic tab to show the change
+            document.querySelector('.tab[data-tab="basic"]').click();
+            showToast('Sablon beillesztve az összefoglalóba!', 'success');
+        }
+
+        // ==================== MODIFY EXISTING FUNCTIONS ====================
+
+        // Modify editProtocol to load defects
+        const originalEditProtocol = editProtocol;
+        editProtocol = async function (id) {
+            await originalEditProtocol(id);
+            await loadProtocolDefects(id);
+        }
+
+        // Modify showNewForm to clear defects
+        const originalShowNewForm = showNewForm;
+        showNewForm = async function () {
+            await originalShowNewForm();
+            await loadProtocolDefects(null);
+        }
+
+        // Initialize
+        loadProtocols();
+        loadDefectTypes();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vbf_postgres
+    environment:
+      POSTGRES_USER: vbf_user
+      POSTGRES_PASSWORD: vbf_secure_password
+      POSTGRES_DB: vbf_database
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vbf_user -d vbf_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: vbf_backend
+    environment:
+      DATABASE_URL: postgresql://vbf_user:vbf_secure_password@db:5432/vbf_database
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./templates:/app/templates
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads_data:
