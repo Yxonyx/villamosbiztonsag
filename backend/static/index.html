@@ -1946,11 +1946,11 @@
             const rcd = Array.from(document.querySelectorAll('#rcdTests tr')).map(tr => ({
                 circuit_name: tr.querySelector('.rcd-circuit')?.value || '',
                 breaker_type: tr.querySelector('.rcd-breaker-type')?.value || 'B',
-                breaker_value: parseFloat(tr.querySelector('.rcd-breaker-value')?.value) || null,
+                breaker_value: tr.querySelector('.rcd-breaker-value')?.value || null,
                 wire_material: tr.querySelector('.rcd-wire-material')?.value || 'Cu',
-                wire_cross_section: parseFloat(tr.querySelector('.rcd-wire-size')?.value) || null,
+                wire_cross_section: tr.querySelector('.rcd-wire-size')?.value || null,
                 test_type: tr.querySelector('.rcd-type').value,
-                rated_current_ma: parseInt(tr.querySelector('.rcd-rated')?.value) || 30,
+                rated_current_ma: tr.querySelector('.rcd-rated')?.value || null,
                 trip_time_ms: parseFloat(tr.querySelector('.rcd-time').value) || null,
                 passed: tr.querySelector('.rcd-passed').value === 'true'
             })).filter(m => m.test_type || m.circuit_name);
