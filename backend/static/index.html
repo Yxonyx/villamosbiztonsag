@@ -952,14 +952,50 @@
                 </div>
                 <input type="hidden" id="protocolType" value="vbf">
 
+                <!-- Measurement Tab Selector -->
+                <div id="tabSelector"
+                    style="margin: 16px 0; padding: 16px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200);">
+                    <label
+                        style="display: block; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem; color: var(--text-muted);">📋
+                        Mérések kiválasztása (pipáld be, ami kell):</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px 16px;">
+                        <label class="tab-check"
+                            style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.9rem;">
+                            <input type="checkbox" class="tab-toggle" data-tab-target="rpe" checked> Rpe mérés
+                        </label>
+                        <label class="tab-check"
+                            style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.9rem;">
+                            <input type="checkbox" class="tab-toggle" data-tab-target="insulation" checked> Szigetelés
+                        </label>
+                        <label class="tab-check"
+                            style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.9rem;">
+                            <input type="checkbox" class="tab-toggle" data-tab-target="loop" checked> Hurokell.
+                        </label>
+                        <label class="tab-check"
+                            style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.9rem;">
+                            <input type="checkbox" class="tab-toggle" data-tab-target="rcd" checked> FI-relé
+                        </label>
+                        <label class="tab-check"
+                            style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.9rem;">
+                            <input type="checkbox" class="tab-toggle" data-tab-target="earthing"> Földelés
+                        </label>
+                        <label class="tab-check"
+                            style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:0.9rem;">
+                            <input type="checkbox" class="tab-toggle" data-tab-target="eph"> EPH bekötések
+                        </label>
+                    </div>
+                </div>
+
                 <div class="tabs">
                     <button type="button" class="tab active" data-tab="basic">Alapadatok</button>
-                    <button type="button" class="tab vbf-only" data-tab="rpe">Rpe mérés</button>
-                    <button type="button" class="tab vbf-only" data-tab="insulation">Szigetelés</button>
-                    <button type="button" class="tab vbf-only" data-tab="loop">Hurokell.</button>
-                    <button type="button" class="tab vbf-only" data-tab="rcd">FI-relé</button>
-                    <button type="button" class="tab eph-tab" data-tab="earthing">Földelés</button>
-                    <button type="button" class="tab eph-tab" data-tab="eph">EPH bekötések</button>
+                    <button type="button" class="tab toggleable-tab" data-tab="rpe">Rpe mérés</button>
+                    <button type="button" class="tab toggleable-tab" data-tab="insulation">Szigetelés</button>
+                    <button type="button" class="tab toggleable-tab" data-tab="loop">Hurokell.</button>
+                    <button type="button" class="tab toggleable-tab" data-tab="rcd">FI-relé</button>
+                    <button type="button" class="tab toggleable-tab" data-tab="earthing"
+                        style="display:none;">Földelés</button>
+                    <button type="button" class="tab toggleable-tab" data-tab="eph" style="display:none;">EPH
+                        bekötések</button>
                     <button type="button" class="tab" data-tab="defects" style="color: var(--danger);">🚨
                         Hibajegyzék</button>
                     <button type="button" class="tab" data-tab="summary">Összesítés</button>
@@ -1433,12 +1469,16 @@
                 }
             });
 
-            // Show/hide tabs based on type
-            document.querySelectorAll('.tab.vbf-only').forEach(tab => {
-                tab.classList.toggle('hidden', type === 'eph');
-            });
-            document.querySelectorAll('.tab.eph-tab').forEach(tab => {
-                tab.style.display = (type === 'eph' || type === 'vbf') ? '' : 'none';
+            // Set default checkbox presets based on type
+            const presets = {
+                vbf: { rpe: true, insulation: true, loop: true, rcd: true, earthing: false, eph: false },
+                eph: { rpe: false, insulation: false, loop: false, rcd: false, earthing: true, eph: true }
+            };
+            const preset = presets[type] || presets.vbf;
+            document.querySelectorAll('.tab-toggle').forEach(cb => {
+                const target = cb.dataset.tabTarget;
+                cb.checked = preset[target] || false;
+                updateTabVisibility(target, cb.checked);
             });
 
             // Update inspection type dropdown
@@ -1449,8 +1489,27 @@
             }
 
             // Reset to first tab
-            document.querySelector('.tab').click();
+            document.querySelector('.tabs .tab').click();
         }
+
+        // Toggle tab visibility based on checkbox
+        function updateTabVisibility(tabName, isVisible) {
+            const tabBtn = document.querySelector(`.tabs .tab[data-tab="${tabName}"]`);
+            if (tabBtn) {
+                tabBtn.style.display = isVisible ? '' : 'none';
+                // If hiding an active tab, switch to Alapadatok
+                if (!isVisible && tabBtn.classList.contains('active')) {
+                    document.querySelector('.tabs .tab[data-tab="basic"]').click();
+                }
+            }
+        }
+
+        // Tab toggle checkbox event listeners
+        document.querySelectorAll('.tab-toggle').forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateTabVisibility(cb.dataset.tabTarget, cb.checked);
+            });
+        });
 
         // Show list view
         function showList() {
