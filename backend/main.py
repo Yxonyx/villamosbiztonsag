@@ -15,13 +15,15 @@ import models
 import schemas
 from docx_generator import generate_protocol_docx, generate_eph_docx
 from padfx_parser import parse_padfx_content
+from update_db import update_database
 
 # Uploads directory
 UPLOADS_DIR = Path("uploads/defect_images")
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Create tables
+# Create tables and run schema updates
 Base.metadata.create_all(bind=engine)
+update_database()
 
 app = FastAPI(
     title="VBF Jegyzőkönyv API",
