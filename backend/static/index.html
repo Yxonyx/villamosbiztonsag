@@ -1423,6 +1423,16 @@
             // Show/hide EPH fields
             document.getElementById('ephFields').classList.toggle('hidden', type === 'vbf');
 
+            // Remove 'required' from hidden EPH fields to prevent browser validation errors
+            document.querySelectorAll('#ephFields input[required], #ephFields select[required]').forEach(el => {
+                if (type === 'vbf') {
+                    el.removeAttribute('required');
+                    el.dataset.wasRequired = 'true';
+                } else if (el.dataset.wasRequired) {
+                    el.setAttribute('required', '');
+                }
+            });
+
             // Show/hide tabs based on type
             document.querySelectorAll('.tab.vbf-only').forEach(tab => {
                 tab.classList.toggle('hidden', type === 'eph');
@@ -2046,10 +2056,19 @@
         // Toast notifications
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.cssText = 'position:fixed; bottom:24px; right:24px; z-index:99999;';
+            const icons = { success: '✅', error: '❌', warning: '⚠️' };
+            toast.innerHTML = `<span style="font-size:1.2em">${icons[type] || ''}</span> ${message}`;
             document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            // Trigger animation
+            requestAnimationFrame(() => {
+                toast.classList.add('show');
+            });
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
         }
 
         // ==================== DEFECTS MANAGEMENT ====================
