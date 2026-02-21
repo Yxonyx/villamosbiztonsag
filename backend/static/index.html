@@ -1109,13 +1109,33 @@
 
                 <!-- Insulation Measurements Tab (VBF only) -->
                 <div id="tab-insulation" class="tab-content">
-                    <h4>Szigetelési ellenállás mérések (500V DC)</h4>
-                    <p style="color: var(--gray-600); margin-bottom: 16px;">Határérték: ≥ 1 MΩ</p>
-                    <div class="measurement-table">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                        <div>
+                            <h4>Áramköri listák / Szigetelésmérés</h4>
+                            <p style="color: var(--gray-600);">Határérték szigetelésre: ≥ 1 MΩ (Hurok: Zs ≤ U0 / Ia)</p>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="file" id="padfxInput" accept=".padfx" style="display: none;"
+                                onchange="handlePadfxUpload(event)">
+                            <button type="button" class="btn btn-primary btn-sm"
+                                onclick="document.getElementById('padfxInput').click()">
+                                📥 PADFX (Metrel) Import
+                            </button>
+                        </div>
+                    </div>
+                    <div class="measurement-table" style="overflow-x: auto;">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Áramkör</th>
+                                    <th>Áramkör megnevezése</th>
+                                    <th>Megszakító</th>
+                                    <th>In (A)</th>
+                                    <th>Vezeték</th>
+                                    <th>Keresztm. (mm²)</th>
+                                    <th>Zs (Ω)</th>
+                                    <th>dU (%)</th>
+                                    <th>Tűz. (A-F)</th>
                                     <th>L-N (MΩ)</th>
                                     <th>L-PE (MΩ)</th>
                                     <th>N-PE (MΩ)</th>
@@ -1325,6 +1345,18 @@
                             Sor hozzáadása
                         </button>
                     </div>
+
+                    <div
+                        style="margin-top: 24px; padding: 16px; background: var(--gray-50); border-radius: var(--radius-md); border: 1px solid var(--gray-200);">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Jegyzőkönyv
+                            állapota</label>
+                        <select id="protocolStatus" style="max-width: 300px;">
+                            <option value="draft">Piszkozat (Szerkesztés alatt)</option>
+                            <option value="completed">Kész (Véglegesített)</option>
+                        </select>
+                        <p style="font-size: 0.85rem; color: var(--gray-600); margin-top: 8px;">Állítsa "Kész"-re a
+                            jegyzőkönyvet, ha a vizsgálat végleges és nyomtatásra kész.</p>
+                    </div>
                 </div>
 
                 <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
@@ -1425,6 +1457,7 @@
             document.getElementById('formTitle').textContent = 'Új jegyzőkönyv';
             document.getElementById('protocolForm').reset();
             document.getElementById('protocolId').value = '';
+            document.getElementById('protocolStatus').value = 'draft';
             document.getElementById('typeSelector').classList.remove('hidden');
 
             // Reset to VBF type
@@ -1480,6 +1513,7 @@
                 document.getElementById('inspectorName').value = protocol.inspector_name;
                 document.getElementById('professionalSummary').value = protocol.professional_summary || '';
                 document.getElementById('defectList').value = protocol.defect_list || '';
+                document.getElementById('protocolStatus').value = protocol.status || 'draft';
 
                 // Fill EPH specific fields
                 document.getElementById('gasProviderRequired').checked = protocol.gas_provider_required || false;
@@ -1513,7 +1547,6 @@
             }
         }
 
-        // Clear all measurement tables
         function clearMeasurementTables() {
             document.getElementById('rpeMeasurements').innerHTML = '';
             document.getElementById('insulationMeasurements').innerHTML = '';
@@ -1522,6 +1555,47 @@
             document.getElementById('summaryResults').innerHTML = '';
             document.getElementById('earthingMeasurements').innerHTML = '';
             document.getElementById('ephMeasurements').innerHTML = '';
+        }
+
+        async function handlePadfxUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showToast('PADFX feldolgozása folyamatban...', 'warning');
+                const response = await fetch(`${API_URL}/import-padfx`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Hiba a feltöltés során');
+                }
+
+                const data = await response.json();
+
+                // Kész áramkörök hozzáadása a memóriából
+                if (data.circuits && data.circuits.length > 0) {
+                    data.circuits.forEach(c => {
+                        addInsulationRow({
+                            circuit_name: c.circuit_name,
+                            zs_value_ohm: c.zs_value_ohm ? parseFloat(c.zs_value_ohm.replace(',', '.')) : null
+                            // A további parser mezők is ide jöhetnek, amiket a padfx_parser.py visszaad
+                        });
+                    });
+                    showToast(`${data.circuits.length} áramkör sikeresen importálva!`, 'success');
+                } else {
+                    showToast('Nem található mért adat / áramkör a fájlban.', 'warning');
+                }
+
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+            event.target.value = ''; // Reset input
         }
 
         // Add default summary rows
@@ -1557,16 +1631,77 @@
         function addInsulationRow(data = {}) {
             const tbody = document.getElementById('insulationMeasurements');
             const tr = document.createElement('tr');
+
+            // Extract values so we can reuse them correctly for copy row
+            const val = {
+                circuit: data.circuit_name || '',
+                brType: data.breaker_type || '',
+                brVal: data.breaker_value !== undefined && data.breaker_value !== null ? data.breaker_value : '',
+                wireMat: data.wire_material || 'Cu',
+                wireCross: data.wire_cross_section !== undefined && data.wire_cross_section !== null ? data.wire_cross_section : '',
+                zs: data.zs_value_ohm !== undefined && data.zs_value_ohm !== null ? data.zs_value_ohm : '',
+                du: data.du_value_percent !== undefined && data.du_value_percent !== null ? data.du_value_percent : '',
+                fire: data.fire_rating || '-',
+                ln: data.ln_value_mohm !== undefined && data.ln_value_mohm !== null ? data.ln_value_mohm : '',
+                lpe: data.lpe_value_mohm !== undefined && data.lpe_value_mohm !== null ? data.lpe_value_mohm : '',
+                npe: data.npe_value_mohm !== undefined && data.npe_value_mohm !== null ? data.npe_value_mohm : '',
+                passed: data.passed !== false
+            };
+
             tr.innerHTML = `
-                <td><input type="text" class="ins-circuit" value="${data.circuit_name || ''}" placeholder="Világítás"></td>
-                <td><input type="number" step="0.01" class="ins-ln" value="${data.ln_value_mohm || ''}" placeholder="252.83"></td>
-                <td><input type="number" step="0.01" class="ins-lpe" value="${data.lpe_value_mohm || ''}" placeholder="317.58"></td>
-                <td><input type="number" step="0.01" class="ins-npe" value="${data.npe_value_mohm || ''}" placeholder="301.19"></td>
-                <td><select class="ins-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
-                <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
+                <td><input type="text" class="ins-circuit" value="${val.circuit}" placeholder="Világítás"></td>
+                <td><select class="ins-brtype" style="width: 70px;">
+                    <option value="" ${val.brType === '' ? 'selected' : ''}>-</option>
+                    <option value="B" ${val.brType === 'B' ? 'selected' : ''}>B</option>
+                    <option value="C" ${val.brType === 'C' ? 'selected' : ''}>C</option>
+                    <option value="D" ${val.brType === 'D' ? 'selected' : ''}>D</option>
+                </select></td>
+                <td><input type="number" step="0.5" class="ins-brval" value="${val.brVal}" placeholder="16" style="width: 60px;"></td>
+                <td><select class="ins-wiremat" style="width: 70px;">
+                    <option value="Cu" ${val.wireMat === 'Cu' ? 'selected' : ''}>Cu</option>
+                    <option value="Al" ${val.wireMat === 'Al' ? 'selected' : ''}>Al</option>
+                </select></td>
+                <td><input type="number" step="0.1" class="ins-wirecross" value="${val.wireCross}" placeholder="1.5" style="width: 70px;"></td>
+                <td><input type="number" step="0.01" class="ins-zs" value="${val.zs}" placeholder="0.4" style="width: 70px;"></td>
+                <td><input type="number" step="0.1" class="ins-du" value="${val.du}" placeholder="1" style="width: 60px;"></td>
+                <td><select class="ins-fire" style="width: 70px;">
+                    <option value="-" ${val.fire === '-' ? 'selected' : ''}>-</option>
+                    <option value="A" ${val.fire === 'A' ? 'selected' : ''}>A</option>
+                    <option value="B" ${val.fire === 'B' ? 'selected' : ''}>B</option>
+                    <option value="C" ${val.fire === 'C' ? 'selected' : ''}>C</option>
+                    <option value="D" ${val.fire === 'D' ? 'selected' : ''}>D</option>
+                    <option value="E" ${val.fire === 'E' ? 'selected' : ''}>E</option>
+                </select></td>
+                <td><input type="number" step="0.01" class="ins-ln" value="${val.ln}" placeholder=">500" style="width: 80px;"></td>
+                <td><input type="number" step="0.01" class="ins-lpe" value="${val.lpe}" placeholder=">500" style="width: 80px;"></td>
+                <td><input type="number" step="0.01" class="ins-npe" value="${val.npe}" placeholder=">500" style="width: 80px;"></td>
+                <td><select class="ins-passed" style="width: 80px;"><option value="true" ${val.passed ? 'selected' : ''}>Igen</option><option value="false" ${!val.passed ? 'selected' : ''}>Nem</option></select></td>
+                <td style="display: flex; gap: 4px;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyInsulationRow(this)" title="Sor másolása">📋</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()" title="Törlés">✕</button>
+                </td>
             `;
             tbody.appendChild(tr);
         }
+
+        function copyInsulationRow(btn) {
+            const tr = btn.closest('tr');
+            addInsulationRow({
+                circuit_name: tr.querySelector('.ins-circuit').value,
+                breaker_type: tr.querySelector('.ins-brtype').value,
+                breaker_value: parseFloat(tr.querySelector('.ins-brval').value) || null,
+                wire_material: tr.querySelector('.ins-wiremat').value,
+                wire_cross_section: parseFloat(tr.querySelector('.ins-wirecross').value) || null,
+                zs_value_ohm: parseFloat(tr.querySelector('.ins-zs').value) || null,
+                du_value_percent: parseFloat(tr.querySelector('.ins-du').value) || null,
+                fire_rating: tr.querySelector('.ins-fire').value,
+                ln_value_mohm: parseFloat(tr.querySelector('.ins-ln').value) || null,
+                lpe_value_mohm: parseFloat(tr.querySelector('.ins-lpe').value) || null,
+                npe_value_mohm: parseFloat(tr.querySelector('.ins-npe').value) || null,
+                passed: tr.querySelector('.ins-passed').value === 'true'
+            });
+        }
+
 
         function addLoopRow(data = {}) {
             const tbody = document.getElementById('loopMeasurements');
@@ -1696,9 +1831,16 @@
 
             const insulation = Array.from(document.querySelectorAll('#insulationMeasurements tr')).map(tr => ({
                 circuit_name: tr.querySelector('.ins-circuit').value,
-                ln_value_mohm: parseFloat(tr.querySelector('.ins-ln').value) || 0,
-                lpe_value_mohm: parseFloat(tr.querySelector('.ins-lpe').value) || 0,
-                npe_value_mohm: parseFloat(tr.querySelector('.ins-npe').value) || 0,
+                breaker_type: tr.querySelector('.ins-brtype').value || null,
+                breaker_value: parseFloat(tr.querySelector('.ins-brval').value) || null,
+                wire_material: tr.querySelector('.ins-wiremat').value || null,
+                wire_cross_section: parseFloat(tr.querySelector('.ins-wirecross').value) || null,
+                zs_value_ohm: parseFloat(tr.querySelector('.ins-zs').value) || null,
+                du_value_percent: parseFloat(tr.querySelector('.ins-du').value) || null,
+                fire_rating: tr.querySelector('.ins-fire').value !== '-' ? tr.querySelector('.ins-fire').value : null,
+                ln_value_mohm: parseFloat(tr.querySelector('.ins-ln').value) || null,
+                lpe_value_mohm: parseFloat(tr.querySelector('.ins-lpe').value) || null,
+                npe_value_mohm: parseFloat(tr.querySelector('.ins-npe').value) || null,
                 passed: tr.querySelector('.ins-passed').value === 'true'
             })).filter(m => m.circuit_name);
 
@@ -1813,7 +1955,7 @@
                 inspector_name: document.getElementById('inspectorName').value,
                 professional_summary: document.getElementById('professionalSummary').value || null,
                 defect_list: document.getElementById('defectList').value || null,
-                status: 'draft',
+                status: document.getElementById('protocolStatus').value,
                 // Protocol type
                 protocol_type: document.getElementById('protocolType').value,
                 // EPH specific fields

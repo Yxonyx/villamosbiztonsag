@@ -77,12 +77,19 @@ class RpeMeasurement(RpeMeasurementBase):
         from_attributes = True
 
 
-# Insulation Measurement schemas
+# Insulation / Circuit Measurement schemas
 class InsulationMeasurementBase(BaseModel):
     circuit_name: str
-    ln_value_mohm: float
-    lpe_value_mohm: float
-    npe_value_mohm: float
+    breaker_type: Optional[str] = None
+    breaker_value: Optional[float] = None
+    wire_material: Optional[str] = None
+    wire_cross_section: Optional[float] = None
+    zs_value_ohm: Optional[float] = None
+    du_value_percent: Optional[float] = None
+    fire_rating: Optional[str] = None
+    ln_value_mohm: Optional[float] = None
+    lpe_value_mohm: Optional[float] = None
+    npe_value_mohm: Optional[float] = None
     passed: bool = True
 
 

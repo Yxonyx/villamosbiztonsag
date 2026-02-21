@@ -33,6 +33,8 @@ env/
 # Application specific
 backend/vbf_data.db
 backend/vbf_data.db.*
+backend/vbf_database.db
+backend/vbf.db
 backend/uploads/
 backend/test_output.docx
 backend/*.docx

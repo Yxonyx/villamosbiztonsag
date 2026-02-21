@@ -354,21 +354,48 @@ A megfelelőség határértékei:
     
     ins_data = protocol.insulation_measurements if protocol.insulation_measurements else []
     if ins_data:
-        ins_table = doc.add_table(rows=len(ins_data) + 1, cols=5)
+        ins_table = doc.add_table(rows=len(ins_data) + 1, cols=7)
         add_table_borders(ins_table)
         
-        headers = ['Áramkör', 'L–N (MΩ)', 'L–PE (MΩ)', 'N–PE (MΩ)', 'Megfelel']
+        headers = ['Áramkör\nés helye', 'Túláramvéd.\n(Típus/A)', 'Vezeték\n(anyag/mm²)', 'Zs (Ω) / dU (%)', 'Tűz.o.', 'Riso (MΩ)', 'Eredmény']
         for i, h in enumerate(headers):
             ins_table.rows[0].cells[i].text = h
             set_cell_shading(ins_table.rows[0].cells[i], 'D9D9D9')
+            # Optional: set smaller font size for headers
+            if ins_table.rows[0].cells[i].paragraphs[0].runs:
+                ins_table.rows[0].cells[i].paragraphs[0].runs[0].font.size = Pt(9)
         
         for i, ins in enumerate(ins_data):
             row = ins_table.rows[i + 1]
             row.cells[0].text = ins.circuit_name
-            row.cells[1].text = f"{float(ins.ln_value_mohm):.2f}"
-            row.cells[2].text = f"{float(ins.lpe_value_mohm):.2f}"
-            row.cells[3].text = f"{float(ins.npe_value_mohm):.2f}"
-            row.cells[4].text = 'Igen' if ins.passed else 'Nem'
+            
+            br_val_str = f"{float(ins.breaker_value):.1f}".rstrip('0').rstrip('.') if ins.breaker_value else ""
+            breaker = f"{ins.breaker_type or ''}{br_val_str}"
+            row.cells[1].text = breaker if breaker else '-'
+            
+            wire_cross_str = f"{float(ins.wire_cross_section):.1f}".rstrip('0').rstrip('.') if ins.wire_cross_section else ""
+            wire = f"{ins.wire_material or ''} {wire_cross_str}"
+            row.cells[2].text = wire.strip() if wire.strip() else '-'
+            
+            zs_val_str = f"{float(ins.zs_value_ohm):.2f}" if ins.zs_value_ohm else "-"
+            du_val_str = f"{float(ins.du_value_percent):.1f}" if ins.du_value_percent else "-"
+            zs_du = f"{zs_val_str} / {du_val_str}"
+            row.cells[3].text = zs_du if zs_du != "- / -" else "-"
+            
+            row.cells[4].text = ins.fire_rating or '-'
+            
+            ln = f"{float(ins.ln_value_mohm):.1f}" if ins.ln_value_mohm else '-'
+            lpe = f"{float(ins.lpe_value_mohm):.1f}" if ins.lpe_value_mohm else '-'
+            npe = f"{float(ins.npe_value_mohm):.1f}" if ins.npe_value_mohm else '-'
+            row.cells[5].text = f"L-N: {ln}\nL-PE: {lpe}\nN-PE: {npe}"
+            
+            row.cells[6].text = 'Megfelel' if ins.passed else 'Nem mf.'
+            
+            # Reduce font size for measurement rows to fit
+            for cell in row.cells:
+                for paragraph in cell.paragraphs:
+                    for run in paragraph.runs:
+                        run.font.size = Pt(8.5)
     else:
         doc.add_paragraph('Nincs mérési adat.')
     
@@ -434,7 +461,7 @@ A megfelelőség határértékei:
     # Section 6: Inspector declaration
     doc.add_heading('6. Felülvizsgáló nyilatkozata', level=1)
     
-    declaration = """Alulírott kijelentem, hogy a vizsgálatot az MSZ HD 60364-6:2017 és MSZ EN 61557 szabványok alapján, hitelesített mérőműszerrel, szakszerű módszerekkel végeztem, és a jegyzőkönyv valós mérési eredményeket tartalmaz."""
+    declaration = """Alulírott kijelentem, hogy a vizsgálatot az MSZ HD 60364-6:2017 és MSZ EN 61557 szabványok alapján, hitelesített mérőműszerrel, szakszerű módszerekkel végeztem, és a jegyzőkönyv valós mérési eredményeket tartalmaz.\n\nA felülvizsgálat a villamos berendezés szerelésének és a környezeti körülményeinek megváltoztatásáig, de legfeljebb a következő törvényileg előírt időszakos felülvizsgálat esedékességéig érvényes."""
     doc.add_paragraph(declaration)
     
     doc.add_paragraph()

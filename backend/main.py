@@ -14,6 +14,7 @@ from database import get_db, engine, Base
 import models
 import schemas
 from docx_generator import generate_protocol_docx, generate_eph_docx
+from padfx_parser import parse_padfx_content
 
 # Uploads directory
 UPLOADS_DIR = Path("uploads/defect_images")
@@ -51,6 +52,20 @@ async def root():
         with open(html_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     return HTMLResponse(content="<h1>VBF Jegyzőkönyv Alkalmazás</h1><p>Frontend nem található.</p>")
+
+
+# PADFX Import Endpoint
+@app.post("/api/import-padfx")
+async def import_padfx(file: UploadFile = File(...)):
+    """Metrel PADFX mérési adatfájl feldolgozása és JSON-né alakítása"""
+    if not file.filename.endswith('.padfx'):
+        raise HTTPException(status_code=400, detail="Csak .padfx fájlok tölthetők fel.")
+    try:
+        content = await file.read()
+        parsed_data = parse_padfx_content(content)
+        return parsed_data
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # Protocol CRUD endpoints
