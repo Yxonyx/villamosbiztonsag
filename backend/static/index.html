@@ -1216,8 +1216,11 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Áramkör</th>
+                                    <th>Megszakító</th>
+                                    <th>Vezeték</th>
                                     <th>Vizsgálat</th>
-                                    <th>Áram leírás</th>
+                                    <th>IΔn (mA)</th>
                                     <th>Kioldási idő (ms)</th>
                                     <th>Megfelel</th>
                                     <th></th>
@@ -1790,9 +1793,29 @@
             const tbody = document.getElementById('rcdTests');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="text" class="rcd-type" value="${data.test_type || ''}" placeholder="1×IΔn"></td>
-                <td><input type="text" class="rcd-current" value="${data.current_description || ''}" placeholder="Átlagterhelés"></td>
-                <td><input type="number" step="0.01" class="rcd-time" value="${data.trip_time_ms || ''}" placeholder="56.81"></td>
+                <td><input type="text" class="rcd-circuit" value="${data.circuit_name || ''}" placeholder="Fürdő dugalj" style="width:120px"></td>
+                <td>
+                    <div style="display:flex;gap:4px;align-items:center">
+                        <select class="rcd-breaker-type" style="width:55px">
+                            <option value="B" ${data.breaker_type === 'B' ? 'selected' : ''}>B</option>
+                            <option value="C" ${data.breaker_type === 'C' ? 'selected' : ''}>C</option>
+                            <option value="D" ${data.breaker_type === 'D' ? 'selected' : ''}>D</option>
+                        </select>
+                        <input type="number" class="rcd-breaker-value" value="${data.breaker_value || ''}" placeholder="16" style="width:55px">
+                    </div>
+                </td>
+                <td>
+                    <div style="display:flex;gap:4px;align-items:center">
+                        <select class="rcd-wire-material" style="width:55px">
+                            <option value="Cu" ${data.wire_material !== 'Al' ? 'selected' : ''}>Cu</option>
+                            <option value="Al" ${data.wire_material === 'Al' ? 'selected' : ''}>Al</option>
+                        </select>
+                        <input type="number" step="0.5" class="rcd-wire-size" value="${data.wire_cross_section || ''}" placeholder="2.5" style="width:55px">
+                    </div>
+                </td>
+                <td><input type="text" class="rcd-type" value="${data.test_type || '1×IΔn'}" placeholder="1×IΔn" style="width:70px"></td>
+                <td><input type="number" class="rcd-rated" value="${data.rated_current_ma || '30'}" placeholder="30" style="width:60px"></td>
+                <td><input type="number" step="0.01" class="rcd-time" value="${data.trip_time_ms || ''}" placeholder="56.81" style="width:70px"></td>
                 <td><select class="rcd-passed"><option value="true" ${data.passed !== false ? 'selected' : ''}>Igen</option><option value="false" ${data.passed === false ? 'selected' : ''}>Nem</option></select></td>
                 <td><button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">✕</button></td>
             `;
@@ -1921,11 +1944,16 @@
             })).filter(m => m.location);
 
             const rcd = Array.from(document.querySelectorAll('#rcdTests tr')).map(tr => ({
+                circuit_name: tr.querySelector('.rcd-circuit')?.value || '',
+                breaker_type: tr.querySelector('.rcd-breaker-type')?.value || 'B',
+                breaker_value: parseFloat(tr.querySelector('.rcd-breaker-value')?.value) || null,
+                wire_material: tr.querySelector('.rcd-wire-material')?.value || 'Cu',
+                wire_cross_section: parseFloat(tr.querySelector('.rcd-wire-size')?.value) || null,
                 test_type: tr.querySelector('.rcd-type').value,
-                current_description: tr.querySelector('.rcd-current').value,
+                rated_current_ma: parseInt(tr.querySelector('.rcd-rated')?.value) || 30,
                 trip_time_ms: parseFloat(tr.querySelector('.rcd-time').value) || null,
                 passed: tr.querySelector('.rcd-passed').value === 'true'
-            })).filter(m => m.test_type);
+            })).filter(m => m.test_type || m.circuit_name);
 
             const summary = Array.from(document.querySelectorAll('#summaryResults tr')).map(tr => ({
                 test_name: tr.querySelector('.sum-name').value,
