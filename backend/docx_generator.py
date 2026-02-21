@@ -430,20 +430,26 @@ A megfelelőség határértékei:
     
     rcd_data = protocol.rcd_tests if protocol.rcd_tests else []
     if rcd_data:
-        rcd_table = doc.add_table(rows=len(rcd_data) + 1, cols=4)
+        rcd_table = doc.add_table(rows=len(rcd_data) + 1, cols=8)
         add_table_borders(rcd_table)
         
-        headers = ['Vizsgálat', 'Áram', 'Idő (ms)', 'Megfelel']
+        headers = ['Áramkör', 'Megszakító', 'Vezeték', 'Vizsgálat',
+                   'IΔn (mA)', 'Idő (ms)', 'Megfelel']
         for i, h in enumerate(headers):
             rcd_table.rows[0].cells[i].text = h
             set_cell_shading(rcd_table.rows[0].cells[i], 'D9D9D9')
         
         for i, rcd in enumerate(rcd_data):
             row = rcd_table.rows[i + 1]
-            row.cells[0].text = rcd.test_type
-            row.cells[1].text = rcd.current_description
-            row.cells[2].text = f"{float(rcd.trip_time_ms):.2f}" if rcd.trip_time_ms else '-'
-            row.cells[3].text = 'Igen' if rcd.passed else 'Nem'
+            row.cells[0].text = rcd.circuit_name or '-'
+            breaker = f"{rcd.breaker_type or 'B'} {rcd.breaker_value or '-'}" if rcd.breaker_type or rcd.breaker_value else '-'
+            row.cells[1].text = breaker
+            wire = f"{rcd.wire_material or 'Cu'} {rcd.wire_cross_section or '-'} mm²" if rcd.wire_material or rcd.wire_cross_section else '-'
+            row.cells[2].text = wire
+            row.cells[3].text = rcd.test_type or '-'
+            row.cells[4].text = str(rcd.rated_current_ma) if rcd.rated_current_ma else '30'
+            row.cells[5].text = f"{float(rcd.trip_time_ms):.2f}" if rcd.trip_time_ms else '-'
+            row.cells[6].text = 'Igen' if rcd.passed else 'Nem'
     else:
         doc.add_paragraph('Nincs mérési adat.')
     

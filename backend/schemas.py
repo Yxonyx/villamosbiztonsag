@@ -127,8 +127,14 @@ class LoopImpedanceMeasurement(LoopImpedanceMeasurementBase):
 
 # RCD Test schemas
 class RcdTestBase(BaseModel):
-    test_type: str
-    current_description: str
+    circuit_name: Optional[str] = None
+    breaker_type: Optional[str] = None
+    breaker_value: Optional[str] = None
+    wire_material: Optional[str] = None
+    wire_cross_section: Optional[str] = None
+    test_type: str = "1×IΔn"
+    rated_current_ma: Optional[str] = None
+    current_description: Optional[str] = None
     trip_time_ms: Optional[float] = None
     passed: bool = True
 
